@@ -6,10 +6,10 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using TestApplication.DataBase.Configurations;
 using TestApplication.DataBase.Repositories;
-using TestApplication.Services;
-using TestApplication.Interfaces.Crash;
-using TestApplication.Interfaces.Operations;
-using TestApplication.Interfaces.Status;
+using TestApplication.Core.Interfaces.Crash;
+using TestApplication.Core.Interfaces.Operations;
+using TestApplication.Core.Interfaces.Status;
+using TestApplication.Core.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

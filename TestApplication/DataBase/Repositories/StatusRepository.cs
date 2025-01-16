@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TestApplication.Core.Interfaces.Status;
 using TestApplication.DataBase.Configurations;
 using TestApplication.DataBase.Entities;
-using TestApplication.Interfaces.Status;
 
 namespace TestApplication.DataBase.Repositories
 {
@@ -12,6 +12,7 @@ namespace TestApplication.DataBase.Repositories
         public StatusRepository(CrashTrackerDbContext context)
         {
             _context = context;
+
         }
 
         public async Task<List<StatusEntity>> SelectAll()

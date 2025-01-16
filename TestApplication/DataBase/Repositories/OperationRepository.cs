@@ -1,9 +1,9 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
+using TestApplication.Core.Interfaces.Operations;
 using TestApplication.DataBase;
 using TestApplication.DataBase.Configurations;
 using TestApplication.DataBase.Entities;
-using TestApplication.Interfaces.Operations;
 
 namespace TestApplication.DataBase.Repositories
 {

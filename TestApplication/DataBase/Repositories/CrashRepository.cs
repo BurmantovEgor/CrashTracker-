@@ -1,10 +1,10 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
+using TestApplication.Core.Interfaces.Crash;
 using TestApplication.DataBase;
 using TestApplication.DataBase.Configurations;
 using TestApplication.DataBase.Entities;
 using TestApplication.DTO_s;
-using TestApplication.Interfaces.Crash;
 
 namespace TestApplication.DataBase.Repositories
 {
