@@ -6,6 +6,9 @@ namespace TestApplication.Core.Interfaces.Crash
 {
     public interface ICrashRepository
     {
+
+
+
         Task<Result<CrashEntity>> Insert(CrashEntity entity);
         Task<Result<List<CrashEntity>>> SelectAll();
         Task<Result<CrashEntity>> SelectById(Guid id);
