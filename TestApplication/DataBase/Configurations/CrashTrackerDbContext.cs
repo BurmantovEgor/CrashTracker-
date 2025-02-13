@@ -10,12 +10,14 @@ namespace TestApplication.DataBase.Configurations
         public DbSet<CrashEntity> Crash { get; set; }
         public DbSet<OperationEntity> Operation { get; set; }
         public DbSet<StatusEntity> Status { get; set; }
+        public DbSet<UserEntity> User { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new OperationCofiguration());
             modelBuilder.ApplyConfiguration(new CrashConfiguration());
             modelBuilder.ApplyConfiguration(new StatusConfiguration());
+            modelBuilder.ApplyConfiguration(new UserConfiguration());
 
         }
 

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace TestApplication.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdateStatusColumn : Migration
+    public partial class InitialMogration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

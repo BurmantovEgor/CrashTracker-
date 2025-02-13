@@ -1,4 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TestApplication.Core.Interfaces.Crash;
 using TestApplication.DataBase.Entities;
@@ -8,6 +9,7 @@ namespace TestApplication.Application.Controllers
 {
     [Route("api/crash")]
     [ApiController]
+    [Authorize]
     public class CrashControlles : ControllerBase
     {
         private readonly ICrashService _crashService;

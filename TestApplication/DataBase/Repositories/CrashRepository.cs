@@ -60,7 +60,6 @@ namespace TestApplication.DataBase.Repositories
             {
                 return Result.Failure("Статус не существует");
             }
-
             _context.Crash.Update(entity);
             await _context.SaveChangesAsync();
             return Result.Success();

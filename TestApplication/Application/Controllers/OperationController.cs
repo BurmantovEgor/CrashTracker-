@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TestApplication.DTO_s;
 using TestApplication.Core.Interfaces.Operations;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TestApplication.Application.Controllers
 {
     [Route("api/operation")]
     [ApiController]
+    [Authorize]
     public class OperationController : ControllerBase
     {
         private readonly IOperationService _operationService;

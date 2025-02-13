@@ -12,8 +12,8 @@ using TestApplication.DataBase.Configurations;
 namespace TestApplication.Migrations
 {
     [DbContext(typeof(CrashTrackerDbContext))]
-    [Migration("20250116164126_UpdateStatusColumn")]
-    partial class UpdateStatusColumn
+    [Migration("20250208115601_InitialMogration")]
+    partial class InitialMogration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
