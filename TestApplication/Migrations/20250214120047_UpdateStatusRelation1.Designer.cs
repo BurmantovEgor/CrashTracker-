@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TestApplication.DataBase.Configurations;
@@ -11,9 +12,11 @@ using TestApplication.DataBase.Configurations;
 namespace TestApplication.Migrations
 {
     [DbContext(typeof(CrashTrackerDbContext))]
-    partial class CrashTrackerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250214120047_UpdateStatusRelation1")]
+    partial class UpdateStatusRelation1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -43,11 +46,16 @@ namespace TestApplication.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<Guid>("StatusId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CrashStatusId");
 
                     b.HasIndex("CreatedById");
+
+                    b.HasIndex("StatusId");
 
                     b.ToTable("Crash");
                 });
@@ -127,7 +135,15 @@ namespace TestApplication.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("TestApplication.DataBase.Entities.StatusEntity", "Status")
+                        .WithMany()
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("CreatedBy");
+
+                    b.Navigation("Status");
                 });
 
             modelBuilder.Entity("TestApplication.DataBase.Entities.OperationEntity", b =>

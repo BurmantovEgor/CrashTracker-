@@ -21,7 +21,7 @@ namespace TestApplication.Application.Controllers
         public async Task<IActionResult> Login(UserDTOLogin user)
         {
             var result = await _userService.Login(user);
-            if (result.IsFailure) return BadRequest(result.Error);
+            if (result.IsFailure) return NotFound(result.Error);
             return Ok(result.Value);
         }
 

@@ -5,6 +5,6 @@ namespace TestApplication.Core.Abstractions.User
 {
     public interface IAuthService
     {
-        string GenerateJwtToken(UserDTO user);
+        string GenerateJwtToken(UserEntity  user);
     }
 }

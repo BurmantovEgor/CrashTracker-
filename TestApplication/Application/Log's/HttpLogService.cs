@@ -2,13 +2,13 @@
 
 namespace TestApplication.Application.Middleware
 {
-    public class LogService
+    public class HttpLogService
     {
         private readonly RequestDelegate _next;
-        private readonly ILogger<LogService> _logger;
+        private readonly ILogger<HttpLogService> _logger;
         private readonly string _logFilePath;
 
-        public LogService(RequestDelegate next, ILogger<LogService> logger)
+        public HttpLogService(RequestDelegate next, ILogger<HttpLogService> logger)
         {
             _next = next;
             _logger = logger;
@@ -42,6 +42,7 @@ namespace TestApplication.Application.Middleware
             var statusCode = context.Response.StatusCode;
 
             var logEntry = new StringBuilder()
+                .AppendLine("HTTP-Log")
                 .AppendLine($"[{requestTime:HH:mm:ss}] | IP: {ip} | {requestMethod} {requestPath} -> {statusCode}")
                 .AppendLine($"Query: {queryString.Trim()}")
                 .AppendLine($"Request Body: {requestBody.Trim()}")

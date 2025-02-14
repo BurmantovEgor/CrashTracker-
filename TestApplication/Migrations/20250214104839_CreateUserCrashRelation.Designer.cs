@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TestApplication.DataBase.Configurations;
@@ -11,9 +12,11 @@ using TestApplication.DataBase.Configurations;
 namespace TestApplication.Migrations
 {
     [DbContext(typeof(CrashTrackerDbContext))]
-    partial class CrashTrackerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250214104839_CreateUserCrashRelation")]
+    partial class CreateUserCrashRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -28,9 +31,6 @@ namespace TestApplication.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CrashStatusId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("CreatedById")
                         .HasColumnType("uuid");
 
@@ -43,11 +43,14 @@ namespace TestApplication.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<Guid>("StatusId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("CrashStatusId");
-
                     b.HasIndex("CreatedById");
+
+                    b.HasIndex("StatusId");
 
                     b.ToTable("Crash");
                 });
@@ -115,15 +118,15 @@ namespace TestApplication.Migrations
 
             modelBuilder.Entity("TestApplication.DataBase.Entities.CrashEntity", b =>
                 {
-                    b.HasOne("TestApplication.DataBase.Entities.StatusEntity", null)
-                        .WithMany()
-                        .HasForeignKey("CrashStatusId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("TestApplication.DataBase.Entities.UserEntity", "CreatedBy")
                         .WithMany("Crashes")
                         .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TestApplication.DataBase.Entities.StatusEntity", null)
+                        .WithMany()
+                        .HasForeignKey("StatusId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 

@@ -1,6 +1,10 @@
 ﻿using AutoMapper;
 using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Text.Json;
 using TestApplication.Application.DTO_s;
 using TestApplication.Core.Abstractions.User;
 using TestApplication.DataBase.Configurations;
@@ -13,6 +17,7 @@ namespace TestApplication.DataBase.Repositories
 
         private readonly CrashTrackerDbContext _context;
         private readonly IMapper _mapper;
+
         public UserRepository(CrashTrackerDbContext context, IMapper mapper)
         {
             _context = context;
@@ -20,19 +25,14 @@ namespace TestApplication.DataBase.Repositories
         }
 
 
-        public async Task<Result<UserDTO>> Login(UserDTOLogin user)
+
+        public async Task<Result<UserEntity>> Login(UserDTOLogin user)
         {
             var userEntity = await _context.User
                 .FirstOrDefaultAsync(u => u.UserEmail == user.UserEmail);
-            if (userEntity == null) return Result.Failure<UserDTO>("Пользователь не найден");
-            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(user.Password + userEntity.UserEmail, userEntity.PasswordHash);
-            if (!isPasswordValid)return Result.Failure<UserDTO>("Неверный пароль");
-            var userDto = _mapper.Map<UserDTO>(userEntity);
-            return Result.Success(userDto);
+            if (userEntity == null) return Result.Failure<UserEntity>("Пользователь с таким Email не найден");
+            return Result.Success(userEntity);
         }
-
-
-
 
         public async Task<Result<UserDTO>> Register(UserEntity user)
         {
@@ -42,5 +42,18 @@ namespace TestApplication.DataBase.Repositories
             var userLogin = _mapper.Map<UserDTO>(user);
             return Result.Success(userLogin);
         }
+
+
+        public async Task<bool> CheckUserEmail(string userEmail)
+        {
+            return await _context.User.AnyAsync(u => u.UserEmail == userEmail);
+        }
+
+
+        public async Task<bool> CheckUserName(string userName)
+        {
+            return await _context.User.AnyAsync(u => u.UserName == userName);
+        }
+
     }
 }

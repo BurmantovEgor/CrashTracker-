@@ -24,5 +24,13 @@ namespace TestApplication.DataBase.Repositories
         {
             return await _context.Status.AsNoTracking().FirstOrDefaultAsync(x=>x.Id==statusId);
         }
+        public async Task<List<StatusEntity>> GetStatusesById(List<Guid> statusIds)
+        {
+            return await _context.Status
+                .Where(s => statusIds.Contains(s.Id))
+                .ToListAsync();
+        }
+
+  
     }
 }

@@ -19,12 +19,13 @@ namespace TestApplication.Core.Services
             _configuration = configuration;
         }
 
-        public string GenerateJwtToken(UserDTO user)
+        public string GenerateJwtToken(UserEntity user)
         {
             var key = Encoding.UTF8.GetBytes(_configuration["JwtSettings:SecretKey"]);
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Email, user.UserEmail),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.UserEmail),
                 new Claim(ClaimTypes.Name, user.UserName),
             };
 

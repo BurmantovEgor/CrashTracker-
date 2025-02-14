@@ -6,7 +6,9 @@
         public Guid Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; } = string.Empty;
-        public Guid StatusId { get; set; }
+        public Guid CrashStatusId { get; set; }
         public List<OperationEntity> Operations { get; set; } = [];
+        public Guid CreatedById { get; set; }
+        public UserEntity CreatedBy { get; set; }
     }
 }

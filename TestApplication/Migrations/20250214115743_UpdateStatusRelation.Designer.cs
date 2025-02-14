@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TestApplication.DataBase.Configurations;
@@ -11,9 +12,11 @@ using TestApplication.DataBase.Configurations;
 namespace TestApplication.Migrations
 {
     [DbContext(typeof(CrashTrackerDbContext))]
-    partial class CrashTrackerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250214115743_UpdateStatusRelation")]
+    partial class UpdateStatusRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -115,7 +118,7 @@ namespace TestApplication.Migrations
 
             modelBuilder.Entity("TestApplication.DataBase.Entities.CrashEntity", b =>
                 {
-                    b.HasOne("TestApplication.DataBase.Entities.StatusEntity", null)
+                    b.HasOne("TestApplication.DataBase.Entities.StatusEntity", "Status")
                         .WithMany()
                         .HasForeignKey("CrashStatusId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -128,6 +131,8 @@ namespace TestApplication.Migrations
                         .IsRequired();
 
                     b.Navigation("CreatedBy");
+
+                    b.Navigation("Status");
                 });
 
             modelBuilder.Entity("TestApplication.DataBase.Entities.OperationEntity", b =>

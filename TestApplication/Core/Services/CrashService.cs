@@ -1,4 +1,7 @@
-﻿using CSharpFunctionalExtensions;
+﻿using AutoMapper;
+using CrashTracker.Core.Abstractions;
+using CSharpFunctionalExtensions;
+using System.Security.Claims;
 using TestApplication.Core.Interfaces.Crash;
 using TestApplication.Core.Interfaces.Status;
 using TestApplication.Core.Models;
@@ -9,36 +12,34 @@ public class CrashService : ICrashService
 {
     private readonly ICrashRepository _repository;
     private readonly IStatusService _statusService;
+    private readonly IMapper _mapper;
+    private readonly ClaimsPrincipal _userClaims;
+    private readonly ICashService _cache;
 
-    public CrashService(ICrashRepository repository, IStatusService statusService)
+    public CrashService(ICrashRepository repository, IStatusService statusService, IMapper mapper, IHttpContextAccessor contextAccessor, ICashService cache)
     {
         _repository = repository;
         _statusService = statusService;
+        _mapper = mapper;
+        _userClaims = contextAccessor.HttpContext.User;
+        _cache = cache;
     }
 
     public async Task<Result<CrashDTO>> Create(CrashDTOCreate dto)
     {
         var crashResult = Crash.Create(dto);
         if (crashResult.IsFailure) return Result.Failure<CrashDTO>(crashResult.Error);
-
-
-        var entity = new CrashEntity
-        {
-            Id = crashResult.Value.Id,
-            Name = crashResult.Value.Name,
-            Description = crashResult.Value.Description,
-            StatusId = crashResult.Value.StatusId
-        };
-
+        var userIDStr = _userClaims.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        Guid.TryParse(userIDStr, out Guid userId);
+        var entity = _mapper.Map<CrashEntity>(dto, opts => opts.Items["UserId"] = userId);
         var saveResult = await _repository.Insert(entity);
         if (saveResult.IsFailure) return Result.Failure<CrashDTO>(saveResult.Error);
-
         var crashDTO = new CrashDTO
         {
             Id = saveResult.Value.Id,
             Name = saveResult.Value.Name,
             Description = saveResult.Value.Description,
-            StatusName = saveResult.Value.StatusId.ToString(),
+            StatusName = saveResult.Value.CrashStatusId.ToString(),
         };
 
         return Result.Success(crashDTO);
@@ -48,26 +49,38 @@ public class CrashService : ICrashService
     {
         var result = await _repository.SelectAll();
         if (result.IsFailure) return Result.Failure<List<CrashDTO>>(result.Error);
-
-        var crashDTOs = new List<CrashDTO>();
-
-        foreach (var entity in result.Value)
+        var statusIds = result.Value.Select(c => c.CrashStatusId).Distinct().ToList();
+        List<StatusEntity> statuses = [];
+        var cacheStatusStr = await _cache.GetCacheAsync<List<StatusEntity>>("statusList");
+        if (!cacheStatusStr.IsFailure)
         {
-            var statusName = await _statusService.GetById(entity.StatusId);
-            var crashDTO = new CrashDTO
-            {
-                Id = entity.Id,
-                Name = entity.Name,
-                Description = entity.Description,
-                StatusName = statusName.Name ?? "Не удалось получить статус", 
-                Operations = entity.Operations
-                    .Select(o => new OperationDTO(o.Id, o.Description))
-                    .ToList()
-            };
+            statuses = cacheStatusStr.Value;
+            var missingStatusIds = statusIds
+            .Where(id => !statuses.Any(s => s.Id == id))
+            .ToList();
 
-            crashDTOs.Add(crashDTO);
+            var newStatusesTask = _statusService.GetStatusesById(missingStatusIds);
+            var updatedStatuses = statuses.ToList();
+
+            if (missingStatusIds.Any())
+            {
+                var newStatuses = await newStatusesTask;
+                updatedStatuses.AddRange(newStatuses);
+                await _cache.SetCacheAsync("statusList", updatedStatuses);
+            }
+        }
+        else
+        {
+            statuses = await _statusService.GetStatusesById(statusIds);
+            await _cache.SetCacheAsync<List<StatusEntity>>("statusList", statuses, TimeSpan.FromMinutes(60));
         }
 
+        var crashDTOs = _mapper.Map<List<CrashDTO>>(result.Value);
+        foreach (var crashDTO in crashDTOs)
+        {
+            var status = statuses.FirstOrDefault(s => s.Id.ToString() == crashDTO.StatusName);
+            crashDTO.StatusName = status?.Name ?? "Не удалось получить статус";
+        }
         return Result.Success(crashDTOs);
     }
 
@@ -75,38 +88,30 @@ public class CrashService : ICrashService
     {
         var result = await _repository.SelectById(id);
         if (result.IsFailure) return Result.Failure<CrashDTO>(result.Error);
-
-        var statusName = await _statusService.GetById(result.Value.StatusId);
-
-        var crashDTO = new CrashDTO
-        {
-            Id = result.Value.Id,
-            Name = result.Value.Name,
-            Description = result.Value.Description,
-            StatusName = statusName.Name?? "Не удалось получить статус", 
-            Operations = result.Value.Operations
-                .Select(o => new OperationDTO(o.Id, o.Description))
-                .ToList()
-        };
-
+        var statusName = await _statusService.GetById(result.Value.CrashStatusId);
+        var crashDTO = _mapper.Map<CrashDTO>(result.Value);
+        crashDTO.StatusName = statusName.Name ?? "Не удалось получить статус";
         return Result.Success(crashDTO);
     }
 
     public async Task<Result> Remove(Guid id)
     {
+        var currCrash = await _repository.SelectById(id);
+        if (currCrash.IsFailure) return Result.Failure(currCrash.Error);
+        var currUser = _userClaims.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!currUser.Equals(currCrash.Value.CreatedById.ToString())) return Result.Failure("Вы не можете удалить данную запись");
         return await _repository.Delete(id);
     }
 
     public async Task<Result> Update(CrashDTOUpdate dto)
     {
-        
         var result = await _repository.SelectById(dto.Id);
         if (result.IsFailure) return Result.Failure(result.Error);
-
+        var currUser = _userClaims.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!currUser.Equals(result.Value.CreatedById.ToString())) return Result.Failure("Вы не можете изменять данную запись");
         result.Value.Name = dto.Name;
         result.Value.Description = dto.Description;
-        result.Value.StatusId = dto.Status;
-
+        result.Value.CrashStatusId = dto.Status;
         return await _repository.Update(result.Value);
     }
 }

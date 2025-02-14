@@ -19,7 +19,7 @@ namespace TestApplication.DataBase.Repositories
 
         public async Task<Result<CrashEntity>> Insert(CrashEntity entity)
         {
-            var statusExists = await _context.Status.AnyAsync(s => s.Id == entity.StatusId);
+            var statusExists = await _context.Status.AnyAsync(s => s.Id == entity.CrashStatusId);
             if (!statusExists)
             {
                 return Result.Failure<CrashEntity>("Статус не существует");
@@ -32,7 +32,11 @@ namespace TestApplication.DataBase.Repositories
 
         public async Task<Result<List<CrashEntity>>> SelectAll()
         {
-            var crashes = await _context.Crash.Include(c => c.Operations).AsNoTracking().ToListAsync();
+            var crashes = await _context.Crash
+                .Include(c => c.Operations)
+                .Include(u => u.CreatedBy)
+                .AsNoTracking()
+                .ToListAsync();
             return Result.Success(crashes);
         }
 
@@ -40,7 +44,7 @@ namespace TestApplication.DataBase.Repositories
         {
 
             var crash = await _context.Crash.Include(c => c.Operations).FirstOrDefaultAsync(c => c.Id == id);
-            return crash != null ? Result.Success(crash) : Result.Failure<CrashEntity>("Авария не найдена");
+            return crash != null ? Result.Success(crash) : Result.Failure<CrashEntity>("Запись не найдена");
         }
 
         public async Task<Result> Delete(Guid id)
@@ -55,7 +59,7 @@ namespace TestApplication.DataBase.Repositories
 
         public async Task<Result> Update(CrashEntity entity)
         {
-            var statusExists = await _context.Status.AnyAsync(s => s.Id == entity.StatusId);
+            var statusExists = await _context.Status.AnyAsync(s => s.Id == entity.CrashStatusId);
             if (!statusExists)
             {
                 return Result.Failure("Статус не существует");

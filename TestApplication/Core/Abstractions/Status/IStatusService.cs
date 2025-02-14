@@ -6,7 +6,7 @@ namespace TestApplication.Core.Interfaces.Status
     {
         Task<List<StatusEntity>> GetAll();
         Task<StatusEntity> GetById(Guid id);
-
+        Task<List<StatusEntity>> GetStatusesById(List<Guid> statusIds);
 
     }
 }

@@ -1,4 +1,5 @@
-﻿using TestApplication.Core.Interfaces.Status;
+﻿using Microsoft.EntityFrameworkCore;
+using TestApplication.Core.Interfaces.Status;
 using TestApplication.DataBase.Entities;
 
 namespace TestApplication.Core.Services
@@ -21,5 +22,12 @@ namespace TestApplication.Core.Services
         {
             return await _statusRepository.SelectById(id);
         }
+
+
+        public async Task<List<StatusEntity>> GetStatusesById(List<Guid> statusIds)
+        {
+            return await _statusRepository.GetStatusesById(statusIds);
+        }
+
     }
 }

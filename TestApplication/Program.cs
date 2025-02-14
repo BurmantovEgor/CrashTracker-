@@ -14,12 +14,15 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using CrashTracker.Core.Abstractions;
+using CrashTracker.Core.Services;
+using CrashTracker.Application.Log_s;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddAutoMapper(typeof(UserMapper));
-
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -48,6 +51,16 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration["Redis:ConnectionString"];
+    options.InstanceName = "CrashTracker_";
+});
+builder.Services.AddLogging();
+builder.Services.AddSingleton<RedisLogService>();
+
+
+builder.Services.AddSingleton<ICashService, CashService>();
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -62,6 +75,9 @@ builder.Services.AddScoped<IStatusService, StatusService>();
 builder.Services.AddScoped<IStatusRepository, StatusRepository>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+
+
+
 
 builder.Services.AddDbContext<CrashTrackerDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -91,6 +107,8 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -101,7 +119,7 @@ using (var scope = app.Services.CreateScope())
 
 app.UseSwagger();
 app.UseSwaggerUI();
-app.UseMiddleware<LogService>();
+app.UseMiddleware<HttpLogService>();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 

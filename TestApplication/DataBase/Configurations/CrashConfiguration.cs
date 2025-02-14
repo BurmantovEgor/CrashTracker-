@@ -18,9 +18,14 @@ namespace TestApplication.DataBase.Configurations
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne<StatusEntity>()
-                 .WithMany()  
-                 .HasForeignKey(x => x.StatusId)
-                 .OnDelete(DeleteBehavior.Restrict);
+       .WithMany() 
+       .HasForeignKey(x => x.CrashStatusId)
+       .OnDelete(DeleteBehavior.Restrict); 
+
+            builder.HasOne<UserEntity>(c => c.CreatedBy)
+                .WithMany(u => u.Crashes)
+                .HasForeignKey(x => x.CreatedById)
+                .OnDelete(DeleteBehavior.Restrict);
 
         }
     }

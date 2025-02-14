@@ -6,6 +6,6 @@ namespace TestApplication.Core.Interfaces.Status
     {
         Task<List<StatusEntity>> SelectAll();
         Task<StatusEntity> SelectById(Guid statusId);
-
+        Task<List<StatusEntity>> GetStatusesById(List<Guid> statusIds);
     }
 }

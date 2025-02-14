@@ -9,6 +9,6 @@ namespace TestApplication.DTO_s
         public string Description { get; set; } = string.Empty;
         public string StatusName { get; set; }
         public List<OperationDTO> Operations { get; set; } = [];
-
+        public string UserEmail { get; set; } = string.Empty;
     }
 }
