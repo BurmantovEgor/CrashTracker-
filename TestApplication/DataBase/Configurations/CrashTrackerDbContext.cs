@@ -18,7 +18,6 @@ namespace TestApplication.DataBase.Configurations
             modelBuilder.ApplyConfiguration(new CrashConfiguration());
             modelBuilder.ApplyConfiguration(new StatusConfiguration());
             modelBuilder.ApplyConfiguration(new UserConfiguration());
-
         }
 
         public void SeedStatuses()

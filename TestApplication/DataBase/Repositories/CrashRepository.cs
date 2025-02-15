@@ -68,5 +68,14 @@ namespace TestApplication.DataBase.Repositories
             await _context.SaveChangesAsync();
             return Result.Success();
         }
+
+        public async Task<Result> UpdateProgress(Guid crashId, double progress)
+        {
+            var entity = await _context.Crash.FindAsync(crashId);
+            entity.Progress = progress;
+            var result = _context.SaveChanges();
+            if (result == 0) return Result.Failure($"Не удалось обновить прогресс для операции {crashId}");
+            return Result.Success();
+        }
     }
 }

@@ -29,6 +29,7 @@ namespace TestApplication.DataBase.Repositories
             if (entity == null) return Result.Failure("Операция не найдена");
 
             entity.Description = operationEntity.Description;
+            entity.IsCompleted = operationEntity.IsCompleted;
             await _context.SaveChangesAsync();
             return Result.Success();
         }

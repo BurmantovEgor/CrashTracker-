@@ -12,5 +12,6 @@ namespace TestApplication.Core.Interfaces.Crash
         Task<Result<CrashDTO>> GetById(Guid id);
         Task<Result> Remove(Guid id);
         Task<Result> Update(CrashDTOUpdate dto);
+        Task<Result> UpdateProgress(Guid crashId);
     }
 }

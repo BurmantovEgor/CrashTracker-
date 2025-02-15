@@ -11,5 +11,7 @@ namespace TestApplication.Core.Interfaces.Crash
         Task<Result<CrashEntity>> SelectById(Guid id);
         Task<Result> Delete(Guid id);
         Task<Result> Update(CrashEntity entity);
+        Task<Result> UpdateProgress(Guid crashId, double progress);
+
     }
 }

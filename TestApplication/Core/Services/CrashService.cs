@@ -3,6 +3,7 @@ using CrashTracker.Core.Abstractions;
 using CSharpFunctionalExtensions;
 using System.Security.Claims;
 using TestApplication.Core.Interfaces.Crash;
+using TestApplication.Core.Interfaces.Operations;
 using TestApplication.Core.Interfaces.Status;
 using TestApplication.Core.Models;
 using TestApplication.DataBase.Entities;
@@ -15,14 +16,16 @@ public class CrashService : ICrashService
     private readonly IMapper _mapper;
     private readonly ClaimsPrincipal _userClaims;
     private readonly ICashService _cache;
+    private readonly IOperationRepository _operationRepository;
 
-    public CrashService(ICrashRepository repository, IStatusService statusService, IMapper mapper, IHttpContextAccessor contextAccessor, ICashService cache)
+    public CrashService(ICrashRepository repository, IStatusService statusService, IMapper mapper, IHttpContextAccessor contextAccessor, ICashService cache, IOperationRepository operationRepository)
     {
         _repository = repository;
         _statusService = statusService;
         _mapper = mapper;
         _userClaims = contextAccessor.HttpContext.User;
         _cache = cache;
+        _operationRepository = operationRepository;
     }
 
     public async Task<Result<CrashDTO>> Create(CrashDTOCreate dto)
@@ -113,5 +116,22 @@ public class CrashService : ICrashService
         result.Value.Description = dto.Description;
         result.Value.CrashStatusId = dto.Status;
         return await _repository.Update(result.Value);
+    }
+
+    public async Task<Result> UpdateProgress(Guid crashId)
+    {
+        var operationsForCurrentCrash = await _operationRepository.SelectByCrashId(crashId);
+        if (operationsForCurrentCrash.IsFailure) return Result.Failure(operationsForCurrentCrash.Error);
+        if (operationsForCurrentCrash.Value.Count() == 0) return Result.Success();
+        var successOperCount = operationsForCurrentCrash.Value.Where(x => x.IsCompleted == true).Count();
+        double progress = 0;
+        if (successOperCount >  0)
+        {
+             progress = (double)successOperCount / operationsForCurrentCrash.Value.Count() * 100;
+
+        }
+        var result =  await _repository.UpdateProgress(crashId, progress);
+        if (result.IsFailure) return Result.Failure(result.Error);
+        return Result.Success();
     }
 }

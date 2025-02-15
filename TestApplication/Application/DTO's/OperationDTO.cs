@@ -5,11 +5,12 @@ namespace TestApplication.DTO_s
     {
         public Guid Id { get; set; }
         public string Description { get; set; }
-
-        public OperationDTO(Guid id, string description)
+        public bool IsCompleted { get; set; }
+        public OperationDTO(Guid id, string description, bool isCompleted)
         {
             Id = id;
             Description = description;
+            IsCompleted = isCompleted;
         }
     }
 }

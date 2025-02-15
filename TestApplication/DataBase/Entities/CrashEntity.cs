@@ -10,5 +10,6 @@
         public List<OperationEntity> Operations { get; set; } = [];
         public Guid CreatedById { get; set; }
         public UserEntity CreatedBy { get; set; }
+        public double Progress { get; set; } = 0;
     }
 }

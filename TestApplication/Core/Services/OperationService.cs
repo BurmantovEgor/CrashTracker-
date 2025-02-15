@@ -1,4 +1,7 @@
-﻿using CSharpFunctionalExtensions;
+﻿using CrashTracker.Core;
+using CSharpFunctionalExtensions;
+using MediatR;
+using System.Security.Claims;
 using TestApplication.Core.Interfaces.Crash;
 using TestApplication.Core.Interfaces.Operations;
 using TestApplication.Core.Models;
@@ -8,19 +11,17 @@ using TestApplication.DTO_s;
 public class OperationService : IOperationService
 {
     private readonly IOperationRepository _operationRepository;
-    private readonly ICrashRepository _crashRepository;
-
-    public OperationService(IOperationRepository operationRepository, ICrashRepository crashRepository)
+    private readonly ICrashService _crashService;
+    private readonly IMediator _mediator;
+    public OperationService(IOperationRepository operationRepository, ICrashService crashServise, IMediator mediator)
     {
         _operationRepository = operationRepository;
-        _crashRepository = crashRepository;
+        _crashService = crashServise;
+        _mediator = mediator;
     }
 
     public async Task<Result> Create(Guid crashId, string description)
     {
-        var crashResult = await _crashRepository.SelectById(crashId);
-        if (crashResult.IsFailure) return Result.Failure(crashResult.Error);
-
         var operationResult = Operation.Create(crashId, description);
         if (operationResult.IsFailure) return Result.Failure(operationResult.Error);
 
@@ -28,18 +29,21 @@ public class OperationService : IOperationService
         {
             Id = operationResult.Value.Id,
             CrashId = operationResult.Value.CrashId,
-            Description = operationResult.Value.Description
+            Description = operationResult.Value.Description,
+            IsCompleted = false
         };
+        var result = await _operationRepository.Insert(entity);
 
-        return await _operationRepository.Insert(entity);
+        if (result.IsFailure) return Result.Failure(result.Error);
+        await _mediator.Publish(new OperationChangedEvent(crashId));
+        return Result.Success();
     }
 
     public async Task<Result<List<OperationDTO>>> GetByCrashId(Guid crashId)
     {
         var result = await _operationRepository.SelectByCrashId(crashId);
         if (result.IsFailure) return Result.Failure<List<OperationDTO>>(result.Error);
-
-        var operationDTOs = result.Value.Select(entity => new OperationDTO(entity.Id, entity.Description)
+        var operationDTOs = result.Value.Select(entity => new OperationDTO(entity.Id, entity.Description, entity.IsCompleted)
         ).ToList();
 
         return Result.Success(operationDTOs);
@@ -47,22 +51,30 @@ public class OperationService : IOperationService
 
     public async Task<Result> Update(OperationDTO operationDTO)
     {
-        var result = await _operationRepository.SelectById(operationDTO.Id);
-        if (result.IsFailure) return Result.Failure(result.Error);
+        var resultOperation = await _operationRepository.SelectById(operationDTO.Id);
+        if (resultOperation.IsFailure) return Result.Failure(resultOperation.Error);
 
-      
         var entity = new OperationEntity
         {
-            Id = result.Value.Id,
-            CrashId = result.Value.CrashId,
-            Description = operationDTO.Description
+            Id = resultOperation.Value.Id,
+            CrashId = resultOperation.Value.CrashId,
+            Description = operationDTO.Description,
+            IsCompleted = operationDTO.IsCompleted
         };
-
-        return await _operationRepository.Update(entity);
+        var result = await _operationRepository.Update(entity);
+        if (result.IsFailure) return Result.Failure(result.Error);
+        await _mediator.Publish(new OperationChangedEvent(resultOperation.Value.CrashId));
+        return Result.Success();
     }
 
     public async Task<Result> Remove(Guid id)
     {
-        return await _operationRepository.Delete(id);
+        var operEntity = await _operationRepository.SelectById(id);
+        if (operEntity.IsFailure) return Result.Failure(operEntity.Error);
+        var result = await _operationRepository.Delete(id);
+        if (result.IsFailure) return Result.Failure(result.Error);
+        await _mediator.Publish(new OperationChangedEvent(operEntity.Value.CrashId));
+        return Result.Success();
     }
+
 }

@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization;
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using TestApplication.DataBase.Configurations;
 using TestApplication.DataBase.Repositories;
@@ -58,6 +56,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
 });
 builder.Services.AddLogging();
 builder.Services.AddSingleton<RedisLogService>();
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
 
 builder.Services.AddSingleton<ICashService, CashService>();
