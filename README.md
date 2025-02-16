@@ -25,3 +25,4 @@
 - **JWT (JSON Web Tokens)**  
 - **CSharpFunctionalExtensions**
 - **MediatR**
+- **Docker-compose**
