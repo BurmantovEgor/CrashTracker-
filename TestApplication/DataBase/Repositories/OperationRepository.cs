@@ -1,7 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
 using TestApplication.Core.Interfaces.Operations;
-using TestApplication.DataBase;
 using TestApplication.DataBase.Configurations;
 using TestApplication.DataBase.Entities;
 
@@ -18,47 +17,113 @@ namespace TestApplication.DataBase.Repositories
 
         public async Task<Result<OperationEntity>> Insert(OperationEntity operationEntity)
         {
-            await _context.Operation.AddAsync(operationEntity);
-            await _context.SaveChangesAsync();
-            return Result.Success(operationEntity);
+            try
+            {
+                await _context.Operation.AddAsync(operationEntity);
+                await _context.SaveChangesAsync();
+                return Result.Success(operationEntity);
+            }
+            catch (DbUpdateException)
+            {
+                return Result.Failure<OperationEntity>("Ошибка при вставке данных в базу");
+            }
+            catch (InvalidOperationException)
+            {
+                return Result.Failure<OperationEntity>("Ошибка работы с базой данных");
+            }
+            catch (Exception)
+            {
+                return Result.Failure<OperationEntity>("Внутренняя ошибка сервера");
+            }
         }
 
         public async Task<Result> Update(OperationEntity operationEntity)
         {
-            var entity = await _context.Operation.FindAsync(operationEntity.Id);
-            if (entity == null) return Result.Failure("Операция не найдена");
+            try
+            {
+                var entity = await _context.Operation.FindAsync(operationEntity.Id);
+                if (entity == null)
+                    return Result.Failure("Операция не найдена");
 
-            entity.Description = operationEntity.Description;
-            entity.IsCompleted = operationEntity.IsCompleted;
-            await _context.SaveChangesAsync();
-            return Result.Success();
+                entity.Description = operationEntity.Description;
+                entity.IsCompleted = operationEntity.IsCompleted;
+
+                await _context.SaveChangesAsync();
+                return Result.Success();
+            }
+            catch (DbUpdateException)
+            {
+                return Result.Failure("Ошибка при обновлении данных в базе");
+            }
+            catch (InvalidOperationException)
+            {
+                return Result.Failure("Ошибка работы с базой данных");
+            }
+            catch (Exception)
+            {
+                return Result.Failure("Внутренняя ошибка сервера");
+            }
         }
 
         public async Task<Result> Delete(Guid id)
         {
-            var entity = await _context.Operation.FindAsync(id);
-            if (entity == null) return Result.Failure("Операция не найдена");
+            try
+            {
+                var entity = await _context.Operation.FindAsync(id);
+                if (entity == null)
+                    return Result.Failure("Операция не найдена");
 
-            _context.Operation.Remove(entity);
-            await _context.SaveChangesAsync();
-            return Result.Success();
+                _context.Operation.Remove(entity);
+                await _context.SaveChangesAsync();
+                return Result.Success();
+            }
+            catch (DbUpdateException)
+            {
+                return Result.Failure("Ошибка при удалении данных в базе");
+            }
+            catch (InvalidOperationException)
+            {
+                return Result.Failure("Ошибка работы с базой данных");
+            }
+            catch (Exception)
+            {
+                return Result.Failure("Внутренняя ошибка сервера");
+            }
         }
 
         public async Task<Result<List<OperationEntity>>> SelectByCrashId(Guid crashId)
         {
-            var operations = await _context.Operation
-                .Where(x => x.CrashId == crashId)
-                .ToListAsync();
+            try
+            {
+                var operations = await _context.Operation
+                    .Where(x => x.CrashId == crashId)
+                    .ToListAsync();
 
-            return Result.Success(operations);
+                return operations.Count > 0
+                    ? Result.Success(operations)
+                    : Result.Failure<List<OperationEntity>>("Операции не найдены");
+            }
+            catch (Exception)
+            {
+                return Result.Failure<List<OperationEntity>>("Ошибка при получении данных из базы");
+            }
         }
 
-        public async Task<Result<OperationEntity>> SelectById(Guid crashId)
+        public async Task<Result<OperationEntity>> SelectById(Guid id)
         {
-            var operation = await _context.Operation
-                            .FirstOrDefaultAsync(x => x.Id == crashId);
-            if (operation == null) return Result.Failure<OperationEntity>("Операция не найдена");
-            return Result.Success(operation);
+            try
+            {
+                var operation = await _context.Operation
+                                .FirstOrDefaultAsync(x => x.Id == id);
+
+                return operation != null
+                    ? Result.Success(operation)
+                    : Result.Failure<OperationEntity>("Операция не найдена");
+            }
+            catch (Exception)
+            {
+                return Result.Failure<OperationEntity>("Ошибка при получении операции из базы");
+            }
         }
     }
 }

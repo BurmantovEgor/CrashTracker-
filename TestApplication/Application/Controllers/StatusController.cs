@@ -4,6 +4,7 @@ using TestApplication.Core.Interfaces.Status;
 
 namespace TestApplication.Application.Controllers
 {
+
     [Route("api/status")]
     [ApiController]
     [Authorize]
@@ -15,7 +16,9 @@ namespace TestApplication.Application.Controllers
         {
             _statusService = statusService;
         }
-
+        /// <summary>
+        /// Получить список всех статусов 
+        /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {

@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using TestApplication.Core.Interfaces.Crash;
 
-namespace CrashTracker.Core
+namespace CrashTracker.Core.Helpers
 {
     public class OperationChangedEventHandler : INotificationHandler<OperationChangedEvent>
     {

@@ -17,6 +17,9 @@ namespace TestApplication.Application.Controllers
             _operationService = operationService;
         }
 
+        /// <summary>
+        /// Создать операцию для указанной аварии
+        /// </summary>
         [HttpPost("{crashId}")]
         public async Task<IActionResult> Create(Guid crashId, [FromForm] string description)
         {
@@ -29,20 +32,24 @@ namespace TestApplication.Application.Controllers
 
             return Ok();
         }
-
+        /// <summary>
+        /// Обновить данные операции
+        /// </summary>
         [HttpPut]
         public async Task<IActionResult> Update(OperationDTO operationDTO)
         {
             var result = await _operationService.Update(operationDTO);
-
             if (result.IsFailure)
             {
-                return BadRequest(new { result.Error });
+                return result.Error == "Операция не найдена"
+                    ? NotFound(new { result.Error })
+                    : BadRequest(new { result.Error });
             }
-
             return Ok();
         }
-
+        /// <summary>
+        /// Получить список операций по ID аварии
+        /// </summary>
         [HttpGet("{crashId}")]
         public async Task<IActionResult> GetByCrashId(Guid crashId)
         {
@@ -55,7 +62,9 @@ namespace TestApplication.Application.Controllers
 
             return Ok(result.Value);
         }
-
+        /// <summary>
+        /// Удалить данные об операции
+        /// </summary>
         [HttpDelete("{Id}")]
         public async Task<IActionResult> Delete(Guid Id)
         {

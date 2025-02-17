@@ -17,20 +17,20 @@ namespace TestApplication.DataBase.Repositories
             _context = context;
         }
 
-        public async Task<Result<CrashEntity>> Insert(CrashEntity entity)
+        public async Task<Result<Guid>> Insert(CrashEntity entity)
         {
             var statusExists = await _context.Status.AnyAsync(s => s.Id == entity.CrashStatusId);
             if (!statusExists)
             {
-                return Result.Failure<CrashEntity>("Статус не существует");
+                return Result.Failure<Guid>("Статус не существует");
             }
 
             await _context.Crash.AddAsync(entity);
             await _context.SaveChangesAsync();
-            return Result.Success(entity);
+            return Result.Success(entity.Id);
         }
 
-        public async Task<Result<List<CrashEntity>>> SelectAll()
+        public async Task<Result<List<CrashEntity>>> GetAll()
         {
             var crashes = await _context.Crash
                 .Include(c => c.Operations)
@@ -40,10 +40,12 @@ namespace TestApplication.DataBase.Repositories
             return Result.Success(crashes);
         }
 
-        public async Task<Result<CrashEntity>> SelectById(Guid id)
+        public async Task<Result<CrashEntity>> GetById(Guid id)
         {
 
-            var crash = await _context.Crash.Include(c => c.Operations).FirstOrDefaultAsync(c => c.Id == id);
+            var crash = await _context.Crash.Include(c => c.Operations)
+                .Include(u=>u.CreatedBy)
+                .FirstOrDefaultAsync(c => c.Id == id);
             return crash != null ? Result.Success(crash) : Result.Failure<CrashEntity>("Запись не найдена");
         }
 
@@ -76,6 +78,16 @@ namespace TestApplication.DataBase.Repositories
             var result = _context.SaveChanges();
             if (result == 0) return Result.Failure($"Не удалось обновить прогресс для операции {crashId}");
             return Result.Success();
+        }
+
+        public async Task<Result<List<CrashEntity>>> GetByUserId(Guid id)
+        {
+            var result = await _context.Crash
+                .Include(o => o.Operations)
+                .Include(u => u.CreatedBy)
+                .Where(c => c.CreatedById == id).ToListAsync();
+            if (result.Count == 0) return Result.Failure<List<CrashEntity>>("Не удалось получить записи");
+            return Result.Success(result);
         }
     }
 }

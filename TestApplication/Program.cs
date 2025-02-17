@@ -15,6 +15,7 @@ using Microsoft.OpenApi.Models;
 using CrashTracker.Core.Abstractions;
 using CrashTracker.Core.Services;
 using CrashTracker.Application.Log_s;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,10 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    c.IncludeXmlComments(xmlPath);
+
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -48,6 +53,7 @@ builder.Services.AddSwaggerGen(c =>
             new string[] { }
         }
     });
+
 });
 builder.Services.AddStackExchangeRedisCache(options =>
 {
@@ -59,7 +65,7 @@ builder.Services.AddSingleton<RedisLogService>();
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
 
-builder.Services.AddSingleton<ICashService, CashService>();
+builder.Services.AddSingleton<ICacheService, CacheService>();
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -79,7 +85,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 
 
 builder.Services.AddDbContext<CrashTrackerDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var key = Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]);
 
@@ -109,6 +115,13 @@ builder.Services.AddAuthorization();
 
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<CrashTrackerDbContext>();
+    dbContext.Database.Migrate();
+}
+
 
 using (var scope = app.Services.CreateScope())
 {

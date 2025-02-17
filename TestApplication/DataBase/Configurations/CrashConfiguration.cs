@@ -23,7 +23,7 @@ namespace TestApplication.DataBase.Configurations
        .OnDelete(DeleteBehavior.Restrict); 
 
             builder.HasOne<UserEntity>(c => c.CreatedBy)
-                .WithMany(u => u.Crashes)
+                .WithMany()
                 .HasForeignKey(x => x.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
 
